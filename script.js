@@ -1,4 +1,5 @@
 
+
 /* =========================================================
    GROW YOUR PETS
    CLEAN FULL VERSION
@@ -6491,6 +6492,7 @@ document.addEventListener(
       return;
     }
 
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -7434,36 +7436,17 @@ function applyGivePetCommand(command) {
    PART 4 - POLL AND APPLY
 ========================================================= */
 
-async function pollServerCommands() {
-
-  const rows =
-    await fetchServerCommands();
 
 
-  rows.forEach(
-    function(command) {
-
-      applyGivePetCommand(
-        command
-      );
-
-    }
-  );
-
-}
-
-
-/* run once now */
-
-pollServerCommands();
+// pollServerCommands();
 
 
 /* then check every 3 seconds */
 
-setInterval(
-  pollServerCommands,
-  3000
-);
+// setInterval(
+//   pollServerCommands,
+//   3000
+// );
 /* =========================================================
    SERVER COMMAND MEMORY FIX
 ========================================================= */
@@ -8445,3 +8428,433 @@ setInterval(
   checkNewestAnnouncements,
   3000
 );
+/* =========================================================
+   LATEST SERVER GIVE PET RECEIVER
+========================================================= */
+
+async function checkNewestGivePetCommands() {
+
+  try {
+
+    const result =
+      await appwriteTables.listRows({
+
+        databaseId:
+          SERVER_DATABASE_ID,
+
+        tableId:
+          SERVER_COMMANDS_TABLE_ID,
+
+        queries: [
+
+          Appwrite.Query.orderDesc(
+            "gameCreatedAt"
+          ),
+
+          Appwrite.Query.limit(
+            25
+          )
+
+        ]
+
+      });
+
+
+    const rows =
+      result.rows || [];
+
+
+    rows.forEach(
+      function(command) {
+
+        /* ONLY GIVE PET */
+
+        if (
+          command.commandType !==
+          "givePet"
+        ) {
+          return;
+        }
+
+
+        /* ONLY SERVER COMMANDS */
+
+        if (
+          command.target !==
+          "server"
+        ) {
+          return;
+        }
+
+
+        const commandId =
+          command.gameCommandId ||
+          command.$id;
+
+
+        if (!commandId) {
+          return;
+        }
+
+
+        /*
+          UNIQUE MEMORY
+          SO THE PET IS GIVEN ONLY ONCE
+        */
+
+        const storageKey =
+          "serverGivePet_" +
+          commandId;
+
+
+        if (
+          localStorage.getItem(
+            storageKey
+          )
+        ) {
+          return;
+        }
+
+
+        /* FIND NORMAL PET */
+
+        const normalPet =
+          pets.find(
+            function(pet) {
+
+              return (
+                pet.name ===
+                command.petName
+              );
+
+            }
+          );
+
+
+        /* FIND FUSION PET */
+
+        const fusionRecipe =
+          fusionRecipes.find(
+            function(recipe) {
+
+              return (
+                recipe.result.name ===
+                command.petName
+              );
+
+            }
+          );
+
+
+        let pet = null;
+
+
+        if (normalPet) {
+
+          pet = {
+
+            name:
+              normalPet.name,
+
+            emoji:
+              normalPet.emoji,
+
+            rarity:
+              normalPet.rarity,
+
+            income:
+              normalPet.income,
+
+            fusion:
+              false
+
+          };
+
+        }
+
+
+        else if (fusionRecipe) {
+
+          pet = {
+
+            name:
+              fusionRecipe.result.name,
+
+            emoji:
+              fusionRecipe.result.emoji,
+
+            rarity:
+              fusionRecipe.result.rarity,
+
+            income:
+              fusionRecipe.result.income,
+
+            fusion:
+              true
+
+          };
+
+        }
+
+
+        if (!pet) {
+
+          console.log(
+            "SERVER PET NOT FOUND:",
+            command.petName
+          );
+
+          return;
+        }
+
+
+        /* GET MUTATION */
+
+        const mutation =
+          mutations.find(
+            function(item) {
+
+              return (
+                item.name ===
+                command.mutation
+              );
+
+            }
+          ) || mutations[0];
+
+
+        /*
+          BASE FULL
+        */
+
+        if (
+          ownedPets.length >=
+          MAX_PETS
+        ) {
+
+          showMessage(
+            "🌍 ADMIN SENT " +
+            pet.name +
+            " BUT YOUR BASE IS FULL!"
+          );
+
+
+          /*
+            Mark it used so it doesn't
+            keep trying every 3 seconds.
+          */
+
+          localStorage.setItem(
+            storageKey,
+            "1"
+          );
+
+          return;
+        }
+
+
+        /* GIVE PET */
+
+        ownedPets.push({__serverCommandId:
+  commandId,
+
+          id:
+            Date.now() +
+            Math.random(),
+
+          name:
+            pet.name,
+
+          emoji:
+            pet.emoji,
+
+          rarity:
+            pet.rarity,
+
+          mutation:
+            mutation.name,
+
+          mutationEmoji:
+            mutation.emoji,
+
+          multiplier:
+            mutation.multiplier,
+
+          eventEffect:
+            null,
+
+          eventName:
+            null,
+
+          eventEmoji:
+            "",
+
+          eventMultiplier:
+            1,
+
+          income:
+            pet.income *
+            mutation.multiplier,
+
+          stored:
+            0,
+
+          fusion:
+            pet.fusion
+
+        });
+
+
+        /* REMEMBER COMMAND */
+
+        localStorage.setItem(
+          storageKey,
+          "1"
+        );
+
+
+        /* UPDATE GAME */
+
+        updateGame();
+
+        scanOwnedPetsForIndex();
+
+
+        showMessage(
+          "🌍 ADMIN GAVE YOU " +
+          mutation.emoji +
+          " " +
+          mutation.name +
+          " " +
+          pet.name +
+          "!"
+        );
+
+
+        console.log(
+          "NEW SERVER PET APPLIED:",
+          commandId,
+          pet.name,
+          mutation.name
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "NEWEST GIVE PET ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+/* CHECK NOW */
+
+checkNewestGivePetCommands();
+
+
+/* CHECK EVERY 3 SECONDS */
+
+setInterval(
+  checkNewestGivePetCommands,
+  3000
+);
+/* =========================================================
+   DISABLE OLD GIVE PET RECEIVER
+========================================================= */
+
+applyGivePetCommand =
+  function(command) {
+
+    /*
+      OLD RECEIVER DISABLED.
+      NEWEST GIVE PET RECEIVER
+      handles server pets now.
+    */
+
+    return;
+
+  };
+
+
+console.log(
+  "OLD GIVE PET RECEIVER DISABLED ✅"
+);
+/* =========================================================
+   ADMIN FUSION COMBINATIONS
+========================================================= */
+
+function renderAdminFusionCombinations() {
+
+  const container =
+    document.getElementById(
+      "adminFusionCombinations"
+    );
+
+
+  if (!container) {
+    return;
+  }
+
+
+  container.innerHTML =
+    "";
+
+
+  fusionRecipes.forEach(
+    function(recipe) {
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+
+      row.className =
+        "admin-combo";
+
+
+      const pet1 =
+        recipe.pets[0];
+
+
+      const pet2 =
+        recipe.pets[1];
+
+
+      row.innerHTML = `
+
+        <div>
+          ${pet1}
+          +
+          ${pet2}
+        </div>
+
+        <div class="admin-combo-result">
+          ➜
+          ${recipe.result.emoji}
+          ${recipe.result.name}
+          [${recipe.result.rarity.toUpperCase()}]
+        </div>
+
+      `;
+
+
+      container.appendChild(
+        row
+      );
+
+    }
+  );
+
+}
+
+
+renderAdminFusionCombinations();
