@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Grow Your Pets</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/appwrite@21.0.0"
+  ></script>
+
+  <script
+    src="script.js"
+    defer
+  ></script>
+
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+
+  <header class="top-bar">
+
+    <div class="logo">
+      🐾 GROW YOUR PETS
+    </div>
+
+    <div class="money-box">
+      💵 $<span id="money">500</span>
+    </div>
+
+  </header>
+
+
+  <!-- EVENT BAR -->
+
+  <div
+    id="eventBar"
+    class="event-bar"
+  >
+
+    <div
+      id="eventIcon"
+      class="event-icon"
+    >
+      ⏳
+    </div>
+
+    <div class="event-info">
+
+      <div
+        id="eventTitle"
+        class="event-title"
+      >
+        NEXT EVENT
+      </div>
+
+      <div
+        id="eventDescription"
+        class="event-description"
+      >
+        🌋 Lava • ❄️ Winter • ☯️ Yin Yang
+      </div>
+
+    </div>
+
+    <div
+      id="eventTimer"
+      class="event-timer"
+    >
+      --:--
+    </div>
+
+  </div>
+
+
+  <main>
+
+    <!-- BASE -->
+
+    <section class="base">
+
+      <div class="base-title">
+
+        <span>
+          🏠 YOUR BASE
+        </span>
+
+        <span>
+          <span id="petCount">0</span>/10
+        </span>
+
+      </div>
+
+
+      <div
+        id="slots"
+        class="slots"
+      ></div>
+
+
+      <div class="collect-panel">
+
+        <div class="ready-money">
+          💰 READY:
+          $<span id="readyMoney">0</span>
+        </div>
+
+        <button
+          id="collectAll"
+          class="collect-all"
+          type="button"
+        >
+          💵 COLLECT ALL
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- FUSION LAB -->
+
+    <section class="fusion-lab">
+
+      <div class="fusion-title">
+        🧬 FUSION LAB
+      </div>
+
+
+      <div
+        id="fusionSubtitle"
+        class="fusion-subtitle"
+      >
+        Select 2 pets and discover a new pet!
+      </div>
+
+
+      <div
+        id="fusionMachine"
+        class="fusion-machine"
+      >
+
+        <div
+          id="fusionSlot1"
+          class="fusion-slot"
+        >
+
+          <div class="fusion-question">
+            ?
+          </div>
+
+          <div>
+            SELECT PET
+          </div>
+
+        </div>
+
+
+        <div class="plus">
+          +
+        </div>
+
+
+        <div
+          id="fusionSlot2"
+          class="fusion-slot"
+        >
+
+          <div class="fusion-question">
+            ?
+          </div>
+
+          <div>
+            SELECT PET
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="fusionProgress"
+        class="fusion-progress hidden"
+      >
+
+        <div class="fusion-energy">
+          ⚡ 🧬 ⚡
+        </div>
+
+        <div
+          id="fusionStatus"
+          class="fusion-status"
+        >
+          FUSING...
+        </div>
+
+        <div
+          id="fusionPair"
+          class="fusion-pair"
+        ></div>
+
+        <div
+          id="fusionTimer"
+          class="fusion-timer"
+        >
+          15:00
+        </div>
+
+        <div class="fusion-result-text">
+          RESULT: ???
+        </div>
+
+        <div class="progress-bar">
+
+          <div
+            id="progressFill"
+            class="progress-fill"
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <button
+        id="fuseButton"
+        class="fuse-button"
+        type="button"
+      >
+        🧬 FUSE
+      </button>
+
+
+      <button
+        id="clearFusion"
+        class="clear-fusion"
+        type="button"
+      >
+        CLEAR
+      </button>
+
+
+      <button
+        id="claimButton"
+        class="claim-button hidden"
+        type="button"
+      >
+        ✨ CLAIM PET
+      </button>
+
+
+      <div class="fusion-hint">
+        ⏱️ Fusion takes 15 minutes
+      </div>
+
+    </section>
+
+
+    <!-- PET CARPET -->
+
+    <div class="carpet-info">
+
+      <span>
+        🔥 PET CARPET
+      </span>
+
+      <span>
+        NEXT:
+        <span id="timer">4</span>s
+      </span>
+
+    </div>
+
+
+    <section
+      id="carpet"
+      class="carpet"
+    >
+
+      <div class="middle-line"></div>
+
+    </section>
+
+
+    <div class="tap-tip">
+      👆 Tap a pet to buy it!
+    </div>
+
+  </main>
+
+
+  <!-- MESSAGE -->
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+
+  <!-- INDEX BUTTON -->
+
+  <button
+    id="openIndexButton"
+    class="index-button"
+    type="button"
+  >
+    📖 INDEX
+  </button>
+
+
+  <!-- ADMIN BUTTON -->
+
+  <button
+    id="adminOpenButton"
+    class="admin-open-button"
+    type="button"
+  >
+    👑
+  </button>
+
+
+  <!-- INDEX OVERLAY -->
+
+  <div
+    id="indexOverlay"
+    class="index-overlay hidden"
+  >
+
+    <div class="index-window">
+
+      <div class="index-top">
+
+        <div>
+
+          <div class="index-title">
+            📖 PET INDEX
+          </div>
+
+          <div
+            id="indexCounter"
+            class="index-counter"
+          >
+            0 / 120
+          </div>
+
+        </div>
+
+
+        <button
+          id="closeIndexButton"
+          class="index-close"
+          type="button"
+        >
+          ✕
+        </button>
+
+      </div>
+
+
+      <div class="index-tabs">
+
+        <button
+          class="index-tab active"
+          data-index-type="Normal"
+          type="button"
+        >
+          🐾 NORMAL
+        </button>
+
+        <button
+          class="index-tab"
+          data-index-type="Golden"
+          type="button"
+        >
+          🟡 GOLD
+        </button>
+
+        <button
+          class="index-tab"
+          data-index-type="Diamond"
+          type="button"
+        >
+          💎 DIAMOND
+        </button>
+
+        <button
+          class="index-tab"
+          data-index-type="Rainbow"
+          type="button"
+        >
+          🌈 RAINBOW
+        </button>
+
+        <button
+          class="index-tab"
+          data-index-type="Void"
+          type="button"
+        >
+          🌌 VOID
+        </button>
+
+      </div>
+
+
+      <div
+        id="indexGrid"
+        class="index-grid"
+      ></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ADMIN LOGIN -->
+
+  <div
+    id="adminLoginOverlay"
+    class="hidden"
+  >
+
+    <div class="admin-login-box">
+
+      <div class="admin-crown">
+        👑
+      </div>
+
+      <h2>
+        ADMIN LOGIN
+      </h2>
+
+      <input
+        id="adminEmail"
+        type="email"
+        placeholder="Admin email"
+        autocomplete="email"
+      >
+
+      <input
+        id="adminPassword"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+      >
+
+      <button
+        id="adminLoginButton"
+        type="button"
+      >
+        LOGIN
+      </button>
+
+      <button
+        id="adminLoginClose"
+        type="button"
+      >
+        CANCEL
+      </button>
+
+      <div
+        id="adminLoginMessage"
+      ></div>
+
+    </div>
+
+  </div>
+<!-- ======================================================
+     ADMIN PANEL
+====================================================== -->
+
+<div
+  id="adminPanelOverlay"
+  class="admin-panel-overlay hidden"
+>
+
+  <div class="admin-panel">
+
+    <!-- TOP -->
+
+    <div class="admin-panel-top">
+
+      <div>
+
+        <div class="admin-panel-title">
+          👑 ADMIN PANEL
+        </div>
+
+        <div class="admin-panel-subtitle">
+          Grow Your Pets Server Control
+        </div>
+
+      </div>
+
+
+      <button
+        id="adminPanelClose"
+        class="admin-panel-close"
+        type="button"
+      >
+        ✕
+      </button>
+
+    </div>
+
+
+    <!-- TARGET -->
+
+    <div class="admin-section">
+
+      <div class="admin-section-title">
+        🎯 TARGET
+      </div>
+
+
+      <div class="admin-target-buttons">
+
+        <button
+          id="adminTargetMe"
+          class="admin-target active"
+          type="button"
+        >
+          👤 ME
+        </button>
+
+
+        <button
+          id="adminTargetServer"
+          class="admin-target"
+          type="button"
+        >
+          🌍 ALL SERVER
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- EVENTS -->
+
+    <div class="admin-section">
+
+      <div class="admin-section-title">
+        ⚡ EVENTS
+      </div>
+
+
+      <div class="admin-grid">
+
+        <button
+          id="adminLava"
+          class="admin-action lava"
+          type="button"
+        >
+          🌋
+          <span>LAVA</span>
+        </button>
+
+
+        <button
+          id="adminWinter"
+          class="admin-action winter"
+          type="button"
+        >
+          ❄️
+          <span>WINTER</span>
+        </button>
+
+
+        <button
+          id="adminYinYang"
+          class="admin-action yinyang"
+          type="button"
+        >
+          ☯️
+          <span>YIN YANG</span>
+        </button>
+
+
+        <button
+          id="adminStopEvent"
+          class="admin-action stop"
+          type="button"
+        >
+          ⛔
+          <span>STOP EVENT</span>
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- LUCK -->
+
+    <div class="admin-section">
+
+      <div class="admin-section-title">
+        🍀 LUCK
+      </div>
+
+
+      <button
+        id="adminLucky10"
+        class="admin-big-button lucky"
+        type="button"
+      >
+        🍀 ACTIVATE 10% LUCKY
+      </button>
+
+
+      <button
+        id="adminStopLucky"
+        class="admin-big-button stop-lucky"
+        type="button"
+      >
+        ⛔ STOP LUCKY
+      </button>
+
+    </div>
+
+
+    <!-- GIVE PET -->
+
+    <div class="admin-section">
+
+      <div class="admin-section-title">
+        🐾 GIVE PET
+      </div>
+
+
+      <select id="adminPetSelect">
+
+        <option value="">
+          SELECT PET
+        </option>
+
+      </select>
+
+
+      <select id="adminMutationSelect">
+
+        <option value="Normal">
+          🐾 Normal
+        </option>
+
+        <option value="Golden">
+          🟡 Golden
+        </option>
+
+        <option value="Diamond">
+          💎 Diamond
+        </option>
+
+        <option value="Rainbow">
+          🌈 Rainbow
+        </option>
+
+        <option value="Void">
+          🌌 Void
+        </option>
+
+      </select>
+
+
+      <button
+        id="adminGivePet"
+        class="admin-big-button give"
+        type="button"
+      >
+        🎁 GIVE PET
+      </button>
+
+    </div>
+
+
+    <!-- MONEY -->
+
+    <div class="admin-section">
+
+      <div class="admin-section-title">
+        💰 MONEY
+      </div>
+
+
+      <div class="admin-money-grid">
+
+        <button
+          class="admin-money"
+          data-money="1000"
+          type="button"
+        >
+          +$1K
+        </button>
+
+
+        <button
+          class="admin-money"
+          data-money="1000000"
+          type="button"
+        >
+          +$1M
+        </button>
+
+
+        <button
+          class="admin-money"
+          data-money="1000000000"
+          type="button"
+        >
+          +$1B
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- ANNOUNCEMENT -->
+
+    <div class="admin-section">
+
+      <div class="admin-section-title">
+        📢 ANNOUNCEMENT
+      </div>
+
+      <input
+        id="adminAnnouncementInput"
+        type="text"
+        placeholder="Write announcement..."
+        maxlength="120"
+      >
+
+      <button
+        id="adminSendAnnouncement"
+        class="admin-big-button"
+        type="button"
+      >
+        📢 SEND ANNOUNCEMENT
+      </button>
+
+    </div>
+    <!-- FUSION -->
+
+    <div class="admin-section">
+
+      <div class="admin-section-title">
+        🧬 FUSION
+      </div>
+
+
+      <button
+        id="adminFinishFusion"
+        class="admin-big-button fusion"
+        type="button"
+      >
+        ⚡ FINISH FUSION NOW
+      </button>
+
+    </div>
+
+
+    <!-- ADMIN MESSAGE -->
+
+    <div
+      id="adminPanelMessage"
+      class="admin-panel-message"
+    ></div>
+
+  </div>
+
+</div>
+  <div
+  id="serverAnnouncement"
+  class="server-announcement hidden"
+></div>
+</body>
+
+</html>
