@@ -6360,7 +6360,7 @@ window.addEventListener(
   }
 );
 /* =========================================================
-   FIX ADMIN MONEY BUTTONS
+   ADMIN MONEY - CLEAN ME + ALL SERVER
 ========================================================= */
 
 document.addEventListener(
@@ -6373,7 +6373,6 @@ document.addEventListener(
         ".admin-money"
       );
 
-
     if (!moneyButton) {
       return;
     }
@@ -6383,66 +6382,89 @@ document.addEventListener(
     event.stopPropagation();
 
 
-    try {
-
-      const user =
-        await adminAccount.get();
-
-
-      if (
-        user.$id !==
-        ADMIN_USER_ID
-      ) {
-
-        showMessage(
-          "❌ NOT ADMIN"
-        );
-
-        return;
-      }
+    const amount =
+      Number(
+        moneyButton.dataset.money || 0
+      );
 
 
-      const amount =
-        Number(
-          moneyButton.dataset.money ||
-          0
-        );
+    if (amount <= 0) {
+      return;
+    }
 
 
-      money +=
-        amount;
+    const admin =
+      await p6CheckAdmin();
 
+
+    if (!admin) {
+
+      p6AdminMessage(
+        "❌ NOT ADMIN"
+      );
+
+      return;
+    }
+
+
+    /* =========================
+       ME
+    ========================= */
+
+    if (
+      p6Target === "me"
+    ) {
+
+      money += amount;
 
       updateGame();
 
 
-      showMessage(
+      p6AdminMessage(
         "💰 +$" +
         formatMoney(amount)
       );
 
 
-      const adminMessage =
-        document.getElementById(
-          "adminPanelMessage"
-        );
+      return;
+    }
 
 
-      if (adminMessage) {
+    /* =========================
+       ALL SERVER
+    ========================= */
 
-        adminMessage.textContent =
-          "💰 +$" +
-          formatMoney(amount);
+    try {
 
-      }
+      await sendServerCommand({
+
+        commandType:
+          "giveMoney",
+
+        amount:
+          amount
+
+      });
+
+
+      p6AdminMessage(
+        "🌍 +$" +
+        formatMoney(amount) +
+        " SENT TO SERVER!"
+      );
 
     }
 
     catch (error) {
 
       console.error(
-        "ADMIN MONEY ERROR:",
+        "SERVER MONEY ERROR:",
         error
+      );
+
+
+      p6AdminMessage(
+        "❌ SERVER MONEY FAILED"
       );
 
     }
@@ -6790,83 +6812,7 @@ async function sendServerCommand(data) {
   }
 
 }
-/* =========================================================
-   TEST: ALL SERVER MONEY
-========================================================= */
 
-document.addEventListener(
-  "click",
-  async function(event) {
-
-    const button =
-      event.target.closest(
-        '.admin-money[data-money="1000"]'
-      );
-
-    if (!button) {
-      return;
-    }
-
-
-    /*
-      ONLY WHEN TARGET = SERVER
-    */
-
-    if (
-      typeof p6Target === "undefined" ||
-      p6Target !== "server"
-    ) {
-      return;
-    }
-
-
-    event.preventDefault();
-    event.stopPropagation();
-
-
-    try {
-
-      await sendServerCommand({
-
-        commandType:
-          "giveMoney",
-
-        amount:
-          1000
-
-      });
-
-
-      showMessage(
-        "🌍 +$1K SENT TO SERVER!"
-      );
-
-
-      const msg =
-        document.getElementById(
-          "adminPanelMessage"
-        );
-
-
-      if (msg) {
-
-        msg.textContent =
-          "🌍 +$1K COMMAND SENT!";
-
-      }
-
-    }
-
-    catch (error) {
-
-      console.error(error);
-
-    }
-
-  },
-
-  true
-);
 /* =========================================================
    SAFE SERVER COMMAND RECEIVER
 ========================================================= */
@@ -7817,9 +7763,9 @@ async function checkAnnouncementsSafe() {
         }
 
 
-        showMessage(
-          "📢 " + text
-        );
+showServerAnnouncement(
+  text
+);
 
 
         processedServerCommands.add(
@@ -7934,3 +7880,568 @@ function showServerAnnouncement(text) {
     );
 
 }
+/* =========================================================
+   FIX ALL SERVER MONEY RECEIVER - APPEND ONLY
+========================================================= */
+
+async function checkLatestServerMoneyCommands() {
+
+  try {
+
+    const result =
+      await appwriteTables.listRows({
+
+        databaseId:
+          SERVER_DATABASE_ID,
+
+        tableId:
+          SERVER_COMMANDS_TABLE_ID
+
+      });
+
+
+    const rows =
+      result.rows || [];
+
+
+    rows.forEach(
+      function(command) {
+
+        if (
+          !command ||
+          command.commandType !==
+          "giveMoney"
+        ) {
+          return;
+        }
+
+
+        const commandId =
+          command.gameCommandId ||
+          command.$id;
+
+
+        if (!commandId) {
+          return;
+        }
+
+
+        const used =
+          getUsedServerCommands();
+
+
+        if (
+          used.includes(commandId)
+        ) {
+          return;
+        }
+
+
+        const amount =
+          Number(
+            command.amount || 0
+          );
+
+
+        if (amount > 0) {
+
+          money += amount;
+
+          updateGame();
+
+          showMessage(
+            "🌍 ADMIN GAVE +$" +
+            formatMoney(amount)
+          );
+
+        }
+
+
+        markServerCommandUsed(
+          commandId
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "LATEST SERVER MONEY ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+setInterval(
+  checkLatestServerMoneyCommands,
+  3000
+);
+
+
+checkLatestServerMoneyCommands();
+/* =========================================================
+   FINAL SERVER MONEY RECEIVER FIX
+========================================================= */
+
+const finalMoneyCommandsUsed = new Set(
+  JSON.parse(
+    localStorage.getItem("finalMoneyCommandsUsed") || "[]"
+  )
+);
+
+async function finalCheckServerMoney() {
+
+  try {
+
+    const result = await appwriteTables.listRows({
+      databaseId: SERVER_DATABASE_ID,
+      tableId: SERVER_COMMANDS_TABLE_ID
+    });
+
+    const rows = result.rows || [];
+
+    rows.forEach(function(command) {
+
+      if (command.commandType !== "giveMoney") {
+        return;
+      }
+
+      if (command.target !== "server") {
+        return;
+      }
+
+      const id =
+        command.gameCommandId ||
+        command.$id;
+
+      if (!id) {
+        return;
+      }
+
+      if (finalMoneyCommandsUsed.has(id)) {
+        return;
+      }
+
+      const amount =
+        Number(command.amount || 0);
+
+      if (amount <= 0) {
+        return;
+      }
+
+      /* GIVE THE MONEY */
+
+      money += amount;
+
+      updateGame();
+
+      showMessage(
+        "🌍 ADMIN GAVE +$" +
+        formatMoney(amount)
+      );
+
+      /* REMEMBER COMMAND */
+
+      finalMoneyCommandsUsed.add(id);
+
+      localStorage.setItem(
+        "finalMoneyCommandsUsed",
+        JSON.stringify(
+          Array.from(finalMoneyCommandsUsed).slice(-200)
+        )
+      );
+
+      console.log(
+        "SERVER MONEY RECEIVED:",
+        amount
+      );
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "FINAL SERVER MONEY ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+/* CHECK NOW */
+
+finalCheckServerMoney();
+
+
+/* CHECK EVERY 3 SECONDS */
+
+setInterval(
+  finalCheckServerMoney,
+  3000
+);
+/* =========================================================
+   FINAL ALL SERVER MONEY FIX
+   OVERRIDES OLD MONEY BUTTON HANDLERS
+========================================================= */
+
+document.addEventListener(
+  "click",
+  async function(event) {
+
+    const button =
+      event.target.closest(".admin-money");
+
+    if (!button) return;
+
+    /*
+      ONLY HANDLE SERVER MODE HERE
+    */
+    if (p6Target !== "server") {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const amount =
+      Number(button.dataset.money || 0);
+
+    if (amount <= 0) {
+      showMessage("❌ INVALID AMOUNT");
+      return;
+    }
+
+    try {
+
+      await sendServerCommand({
+        commandType: "giveMoney",
+        amount: amount
+      });
+
+      showMessage(
+        "🌍 SENT +$" +
+        formatMoney(amount) +
+        " TO ALL!"
+      );
+
+      const msg =
+        document.getElementById(
+          "adminPanelMessage"
+        );
+
+      if (msg) {
+        msg.textContent =
+          "🌍 +$" +
+          formatMoney(amount) +
+          " SENT TO ALL!";
+      }
+
+    } catch (error) {
+
+      console.error(
+        "SERVER MONEY SEND FAILED:",
+        error
+      );
+
+      showMessage(
+        "❌ SERVER MONEY FAILED"
+      );
+    }
+
+  },
+
+  /*
+    VERY IMPORTANT:
+    run BEFORE old click handlers
+  */
+  true
+);
+/* =========================================================
+   FINAL LATEST SERVER MONEY RECEIVER
+========================================================= */
+
+async function checkNewestMoneyCommands() {
+
+  try {
+
+    const result =
+      await appwriteTables.listRows({
+
+        databaseId:
+          SERVER_DATABASE_ID,
+
+        tableId:
+          SERVER_COMMANDS_TABLE_ID,
+
+        queries: [
+
+          Appwrite.Query.orderDesc(
+            "gameCreatedAt"
+          ),
+
+          Appwrite.Query.limit(
+            25
+          )
+
+        ]
+
+      });
+
+
+    const rows =
+      result.rows || [];
+
+
+    rows.forEach(
+      function(command) {
+
+        if (
+          command.commandType !==
+          "giveMoney"
+        ) {
+          return;
+        }
+
+
+        if (
+          command.target !==
+          "server"
+        ) {
+          return;
+        }
+
+
+        const commandId =
+          command.gameCommandId ||
+          command.$id;
+
+
+        if (!commandId) {
+          return;
+        }
+
+
+        const storageKey =
+          "serverMoney_" +
+          commandId;
+
+
+        if (
+          localStorage.getItem(
+            storageKey
+          )
+        ) {
+          return;
+        }
+
+
+        const amount =
+          Number(
+            command.amount || 0
+          );
+
+
+        if (
+          amount <= 0
+        ) {
+          return;
+        }
+
+
+        money += amount;
+
+
+        updateGame();
+
+
+        localStorage.setItem(
+          storageKey,
+          "1"
+        );
+
+
+        showMessage(
+          "🌍 ADMIN GAVE +$" +
+          formatMoney(amount)
+        );
+
+
+        console.log(
+          "NEW SERVER MONEY APPLIED:",
+          commandId,
+          amount
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "NEWEST MONEY RECEIVER ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+checkNewestMoneyCommands();
+
+
+setInterval(
+  checkNewestMoneyCommands,
+  3000
+);
+/* =========================================================
+   LATEST SERVER ANNOUNCEMENT RECEIVER
+========================================================= */
+
+async function checkNewestAnnouncements() {
+
+  try {
+
+    const result =
+      await appwriteTables.listRows({
+
+        databaseId:
+          SERVER_DATABASE_ID,
+
+        tableId:
+          SERVER_COMMANDS_TABLE_ID,
+
+        queries: [
+
+          Appwrite.Query.orderDesc(
+            "gameCreatedAt"
+          ),
+
+          Appwrite.Query.limit(
+            25
+          )
+
+        ]
+
+      });
+
+
+    const rows =
+      result.rows || [];
+
+
+    rows.forEach(
+      function(command) {
+
+        if (
+          command.commandType !==
+          "announcement"
+        ) {
+          return;
+        }
+
+
+        if (
+          command.target !==
+          "server"
+        ) {
+          return;
+        }
+
+
+        const commandId =
+          command.gameCommandId ||
+          command.$id;
+
+
+        if (!commandId) {
+          return;
+        }
+
+
+        const storageKey =
+          "serverAnnouncement_" +
+          commandId;
+
+
+        if (
+          localStorage.getItem(
+            storageKey
+          )
+        ) {
+          return;
+        }
+
+
+        const text =
+          String(
+            command.message || ""
+          ).trim();
+
+
+        if (!text) {
+          return;
+        }
+
+
+        /* SHOW IN CENTER */
+
+        showServerAnnouncement(
+          text
+        );
+
+
+        /* REMEMBER IT */
+
+        localStorage.setItem(
+          storageKey,
+          "1"
+        );
+
+
+        console.log(
+          "NEW ANNOUNCEMENT:",
+          commandId,
+          text
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "NEWEST ANNOUNCEMENT ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+/* CHECK NOW */
+
+checkNewestAnnouncements();
+
+
+/* CHECK EVERY 3 SECONDS */
+
+setInterval(
+  checkNewestAnnouncements,
+  3000
+);
