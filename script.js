@@ -11283,4 +11283,296 @@ document.addEventListener(
 
   }
 );
+/* =========================================================
+   ALL SERVER LUCKY BLOCKS
+   MYTHIC + GODLY + SECRET
+   APPEND ONLY
+========================================================= */
 
+
+/* =========================================================
+   ADMIN SEND LUCKY BLOCK TO SERVER
+========================================================= */
+
+document.addEventListener(
+  "click",
+
+  async function(event) {
+
+    const button =
+      event.target.closest(
+        "#adminSpawnMythicBlock, #adminSpawnGodlyBlock, #adminSpawnSecretBlock"
+      );
+
+
+    if (!button) {
+      return;
+    }
+
+
+    /*
+      ME MODE:
+      let the existing button code work normally
+    */
+
+    if (
+      typeof p6Target === "undefined" ||
+      p6Target !== "server"
+    ) {
+      return;
+    }
+
+
+    /*
+      SERVER MODE:
+      stop the local spawn
+    */
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+
+    let type = "";
+
+
+    if (
+      button.id ===
+      "adminSpawnMythicBlock"
+    ) {
+      type = "mythic";
+    }
+
+
+    if (
+      button.id ===
+      "adminSpawnGodlyBlock"
+    ) {
+      type = "godly";
+    }
+
+
+    if (
+      button.id ===
+      "adminSpawnSecretBlock"
+    ) {
+      type = "secret";
+    }
+
+
+    if (!type) {
+      return;
+    }
+
+
+    try {
+
+      await sendServerCommand({
+
+        commandType:
+          "spawnLuckyBlock",
+
+        petName:
+          type
+
+      });
+
+
+      p6AdminMessage(
+        "🌍 " +
+        type.toUpperCase() +
+        " LUCKY BLOCK SENT TO ALL!"
+      );
+
+
+      console.log(
+        "SERVER LUCKY BLOCK SENT:",
+        type
+      );
+
+    }
+
+    catch (error) {
+
+      console.error(
+        "SERVER LUCKY BLOCK SEND ERROR:",
+        error
+      );
+
+
+      showMessage(
+        "❌ LUCKY BLOCK SEND FAILED"
+      );
+
+    }
+
+  },
+
+  true
+);
+
+
+/* =========================================================
+   RECEIVE NEW SERVER LUCKY BLOCKS
+========================================================= */
+
+async function checkNewestLuckyBlockCommands() {
+
+  try {
+
+    const result =
+      await appwriteTables.listRows({
+
+        databaseId:
+          SERVER_DATABASE_ID,
+
+        tableId:
+          SERVER_COMMANDS_TABLE_ID,
+
+        queries: [
+
+          Appwrite.Query.orderDesc(
+            "gameCreatedAt"
+          ),
+
+          Appwrite.Query.limit(
+            25
+          )
+
+        ]
+
+      });
+
+
+    const rows =
+      result.rows || [];
+
+
+    rows.forEach(
+      function(command) {
+
+        if (
+          command.commandType !==
+          "spawnLuckyBlock"
+        ) {
+          return;
+        }
+
+
+        if (
+          command.target !==
+          "server"
+        ) {
+          return;
+        }
+
+
+        const commandId =
+          command.gameCommandId ||
+          command.$id;
+
+
+        if (!commandId) {
+          return;
+        }
+
+
+        const storageKey =
+          "serverLuckyBlock_" +
+          commandId;
+
+
+        /*
+          DON'T SPAWN SAME COMMAND TWICE
+        */
+
+        if (
+          localStorage.getItem(
+            storageKey
+          )
+        ) {
+          return;
+        }
+
+
+        const type =
+          String(
+            command.petName || ""
+          ).toLowerCase();
+
+
+        if (
+          type !== "mythic" &&
+          type !== "godly" &&
+          type !== "secret"
+        ) {
+
+          console.log(
+            "UNKNOWN LUCKY BLOCK:",
+            type
+          );
+
+          return;
+        }
+
+
+        /*
+          MARK USED BEFORE SPAWNING
+          prevents duplicates
+        */
+
+        localStorage.setItem(
+          storageKey,
+          "1"
+        );
+
+
+        /*
+          SPAWN ON THIS PLAYER'S CARPET
+        */
+
+        spawnLuckyBlockByType(
+          type
+        );
+
+
+        showMessage(
+          "🌍 " +
+          type.toUpperCase() +
+          " LUCKY BLOCK SPAWNED!"
+        );
+
+
+        console.log(
+          "SERVER LUCKY BLOCK RECEIVED:",
+          commandId,
+          type
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "SERVER LUCKY BLOCK RECEIVE ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+/* CHECK NOW */
+
+checkNewestLuckyBlockCommands();
+
+
+/* CHECK EVERY 3 SECONDS */
+
+setInterval(
+  checkNewestLuckyBlockCommands,
+  3000
+);
