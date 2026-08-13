@@ -1,5 +1,4 @@
 
-
 /* =========================================================
    GROW YOUR PETS
    CLEAN FULL VERSION
@@ -120,7 +119,55 @@ const gameEvents = [
   }
 
 ];
+/* =========================================================
+   LUCKY BLOCKS
+========================================================= */
 
+const luckyBlocks = {
+
+  mythic: {
+
+    id: "mythic",
+
+    name: "MYTHIC LUCKY BLOCK",
+
+    emoji: "🎁",
+
+    chance: 1,
+
+    rarity: "mythic",
+
+pets: [
+
+  {
+    name: "Sky Serpent",
+    emoji: "🪽🐍",
+    rarity: "mythic",
+    income: 75000,
+    chance: 69
+  },
+
+  {
+    name: "Inferno Lion",
+    emoji: "🔥🦁",
+    rarity: "mythic",
+    income: 100000,
+    chance: 30
+  },
+
+  {
+    name: "Crystal Dragon",
+    emoji: "💎🐲",
+    rarity: "mythic",
+    income: 150000,
+    chance: 1
+  }
+
+]
+
+  }
+
+};
 
 /* =========================================================
    MUTATIONS
@@ -1681,7 +1728,223 @@ function playEventHit(
 /* =========================================================
    SPAWN PET
 ========================================================= */
+/* =========================================================
+   SPAWN MYTHIC LUCKY BLOCK
+========================================================= */
 
+function spawnMythicLuckyBlock() {
+
+  const carpet =
+    document.getElementById(
+      "carpet"
+    );
+
+
+  if (!carpet) {
+    return;
+  }
+
+
+  const block =
+    luckyBlocks.mythic;
+
+
+  const card =
+    document.createElement(
+      "div"
+    );
+
+
+  card.className =
+    "walking-pet mythic";
+
+
+  card.innerHTML = `
+
+    <div class="walk-emoji">
+      🎁
+    </div>
+
+    <div class="walk-name">
+      MYTHIC LUCKY BLOCK
+    </div>
+
+    <div class="walk-rarity">
+      1% SPAWN
+    </div>
+
+    <div class="walk-income">
+      3 MYTHIC PETS INSIDE
+    </div>
+
+    <button
+      class="buy-btn"
+      type="button"
+    >
+      OPEN
+    </button>
+
+  `;
+
+
+  carpet.appendChild(
+    card
+  );
+
+
+  let opened =
+    false;
+
+
+  function openBlock() {
+
+    if (opened) {
+      return;
+    }
+
+
+    if (
+      ownedPets.length >=
+      MAX_PETS
+    ) {
+
+      showMessage(
+        "❌ BASE FULL!"
+      );
+
+      return;
+    }
+
+
+    opened =
+      true;
+
+
+    const reward =
+      block.pets[
+        Math.floor(
+          Math.random() *
+          block.pets.length
+        )
+      ];
+
+
+    ownedPets.push({
+
+      id:
+        Date.now() +
+        Math.random(),
+
+      name:
+        reward.name,
+
+      emoji:
+        reward.emoji,
+
+      rarity:
+        reward.rarity,
+
+      mutation:
+        "Normal",
+
+      mutationEmoji:
+        "",
+
+      multiplier:
+        1,
+
+      eventEffect:
+        null,
+
+      eventName:
+        null,
+
+      eventEmoji:
+        "",
+
+      eventMultiplier:
+        1,
+
+      income:
+        reward.income,
+
+      stored:
+        0,
+
+      fusion:
+        false,
+
+      luckyBlock:
+        "mythic"
+
+    });
+
+
+    card.remove();
+
+
+    updateGame();
+
+    scanOwnedPetsForIndex();
+
+
+    showMessage(
+      "🎁 YOU GOT " +
+      reward.emoji +
+      " " +
+      reward.name +
+      "!"
+    );
+
+  }
+
+
+  const button =
+    card.querySelector(
+      ".buy-btn"
+    );
+
+
+  if (button) {
+
+    button.onclick =
+      function(event) {
+
+        event.stopPropagation();
+
+        openBlock();
+
+      };
+
+  }
+
+
+  card.onclick =
+    function() {
+
+      openBlock();
+
+    };
+
+
+  setTimeout(
+    function() {
+
+      if (
+        card.parentNode &&
+        !opened
+      ) {
+
+        card.remove();
+
+      }
+
+    },
+
+    13000
+  );
+
+}
 function spawnPet() {
 
   const carpet =
@@ -1699,7 +1962,20 @@ function spawnPet() {
     return;
 
   }
+/* MYTHIC LUCKY BLOCK - 1% */
 
+const luckyRoll =
+  Math.random() * 100;
+
+if (
+  luckyRoll <
+  luckyBlocks.mythic.chance
+) {
+
+  spawnMythicLuckyBlock();
+
+  return;
+}
 
   const pet =
     choosePet();
@@ -8858,3 +9134,2153 @@ function renderAdminFusionCombinations() {
 
 
 renderAdminFusionCombinations();
+function getMythicLuckyReward() {
+
+  const block =
+    luckyBlocks.mythic;
+
+  const roll =
+    Math.random() * 100;
+
+  let total = 0;
+
+  for (const pet of block.pets) {
+
+    total += pet.chance;
+
+    if (roll <= total) {
+      return pet;
+    }
+
+  }
+
+  return block.pets[0];
+}
+/* =========================================================
+   PREVIEW ADMIN LOGIN RETRY FIX
+   APPEND ONLY
+========================================================= */
+
+window.addEventListener(
+  "load",
+
+  function() {
+
+    const loginButton =
+      document.getElementById(
+        "adminLoginButton"
+      );
+
+    const emailInput =
+      document.getElementById(
+        "adminEmail"
+      );
+
+    const passwordInput =
+      document.getElementById(
+        "adminPassword"
+      );
+
+    const loginMessage =
+      document.getElementById(
+        "adminLoginMessage"
+      );
+
+    const loginOverlay =
+      document.getElementById(
+        "adminLoginOverlay"
+      );
+
+    const panel =
+      document.getElementById(
+        "adminPanelOverlay"
+      );
+
+
+    if (!loginButton) {
+      return;
+    }
+
+
+    async function wait(ms) {
+
+      return new Promise(
+        function(resolve) {
+
+          setTimeout(
+            resolve,
+            ms
+          );
+
+        }
+      );
+
+    }
+
+
+    async function tryAdminLogin(
+      email,
+      password
+    ) {
+
+      let lastError =
+        null;
+
+
+      for (
+        let attempt = 1;
+        attempt <= 3;
+        attempt++
+      ) {
+
+        try {
+
+          try {
+
+            await adminAccount
+              .deleteSession({
+                sessionId:
+                  "current"
+              });
+
+          }
+
+          catch (error) {}
+
+
+          await adminAccount
+            .createEmailPasswordSession({
+
+              email:
+                email,
+
+              password:
+                password
+
+            });
+
+
+          const user =
+            await adminAccount.get();
+
+
+          if (
+            user.$id !==
+            ADMIN_USER_ID
+          ) {
+
+            throw new Error(
+              "NOT ADMIN"
+            );
+
+          }
+
+
+          return user;
+
+        }
+
+        catch (error) {
+
+          lastError =
+            error;
+
+
+          console.log(
+            "LOGIN RETRY",
+            attempt,
+            error
+          );
+
+
+          if (
+            attempt < 3
+          ) {
+
+            await wait(
+              1200
+            );
+
+          }
+
+        }
+
+      }
+
+
+      throw lastError;
+
+    }
+
+
+    loginButton.addEventListener(
+      "click",
+
+      async function(event) {
+
+        /*
+          Take control before
+          the old login handler.
+        */
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+
+        const email =
+          emailInput
+            ? emailInput.value.trim()
+            : "";
+
+
+        const password =
+          passwordInput
+            ? passwordInput.value
+            : "";
+
+
+        if (
+          !email ||
+          !password
+        ) {
+
+          if (loginMessage) {
+
+            loginMessage.textContent =
+              "Enter email and password.";
+
+          }
+
+          return;
+        }
+
+
+        loginButton.disabled =
+          true;
+
+
+        if (loginMessage) {
+
+          loginMessage.textContent =
+            "Connecting...";
+
+        }
+
+
+        try {
+
+          await tryAdminLogin(
+            email,
+            password
+          );
+
+
+          isAdminLoggedIn =
+            true;
+
+
+          const crown =
+            document.getElementById(
+              "adminOpenButton"
+            );
+
+
+          if (crown) {
+
+            crown.innerHTML =
+              "👑✅";
+
+          }
+
+
+          if (loginOverlay) {
+
+            loginOverlay
+              .classList
+              .add(
+                "hidden"
+              );
+
+          }
+
+
+          if (panel) {
+
+            panel
+              .classList
+              .remove(
+                "hidden"
+              );
+
+          }
+
+
+          if (loginMessage) {
+
+            loginMessage.textContent =
+              "👑 ADMIN ACCESS GRANTED";
+
+          }
+
+
+          showMessage(
+            "👑 ADMIN LOGGED IN!"
+          );
+
+        }
+
+        catch (error) {
+
+          console.error(
+            "PREVIEW LOGIN ERROR:",
+            error
+          );
+
+
+          if (loginMessage) {
+
+            loginMessage.textContent =
+              error &&
+              error.message ===
+              "Load failed"
+
+                ? "❌ APPWRITE CONNECTION FAILED"
+
+                : "❌ " +
+                  (
+                    error.message ||
+                    "LOGIN FAILED"
+                  );
+
+          }
+
+        }
+
+
+        loginButton.disabled =
+          false;
+
+      },
+
+      true
+    );
+
+
+    console.log(
+      "PREVIEW LOGIN RETRY READY ✅"
+    );
+
+  }
+);
+/* =========================================================
+   TEMP CODEPEN PREVIEW ADMIN ACCESS
+   REMOVE LATER
+========================================================= */
+
+window.addEventListener(
+  "load",
+  function() {
+
+    const isCodePenPreview =
+      location.hostname.includes("cdpn.io") ||
+      location.hostname.includes("codepen.io");
+
+
+    if (!isCodePenPreview) {
+      return;
+    }
+
+
+    const crown =
+      document.getElementById(
+        "adminOpenButton"
+      );
+
+    const login =
+      document.getElementById(
+        "adminLoginOverlay"
+      );
+
+    const panel =
+      document.getElementById(
+        "adminPanelOverlay"
+      );
+
+
+    if (!crown || !panel) {
+      return;
+    }
+
+
+    crown.addEventListener(
+      "click",
+      function(event) {
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+
+        if (login) {
+          login.classList.add(
+            "hidden"
+          );
+        }
+
+
+        panel.classList.remove(
+          "hidden"
+        );
+
+
+        crown.innerHTML =
+          "👑✅";
+
+
+        showMessage(
+          "👑 PREVIEW ADMIN"
+        );
+
+      },
+      true
+    );
+
+
+    console.log(
+      "CODEPEN PREVIEW ADMIN READY 👑"
+    );
+
+  }
+);
+/* =========================================================
+   GENERIC LUCKY BLOCK SPAWNER
+   APPEND ONLY
+========================================================= */
+
+function spawnLuckyBlockByType(
+  type
+) {
+
+  const block =
+    luckyBlocks[type];
+
+
+  if (!block) {
+
+    showMessage(
+      "❌ LUCKY BLOCK NOT FOUND"
+    );
+
+    return;
+
+  }
+
+
+  const carpet =
+    document.getElementById(
+      "carpet"
+    );
+
+
+  if (!carpet) {
+
+    return;
+
+  }
+
+
+  const card =
+    document.createElement(
+      "div"
+    );
+
+
+  card.className =
+    "walking-pet " +
+    block.rarity;
+
+
+  card.innerHTML = `
+
+    <div class="walk-emoji">
+      ${block.emoji}
+    </div>
+
+    <div class="walk-name">
+      ${block.name}
+    </div>
+
+    <div class="walk-rarity">
+      ${block.rarity.toUpperCase()}
+    </div>
+
+    <div class="walk-income">
+      3 PETS INSIDE
+    </div>
+
+    <button
+      class="buy-btn"
+      type="button"
+    >
+      OPEN
+    </button>
+
+  `;
+
+
+  carpet.appendChild(
+    card
+  );
+
+
+  let opened =
+    false;
+
+
+  function openLuckyBlock() {
+
+    if (opened) {
+      return;
+    }
+
+
+    if (
+      ownedPets.length >=
+      MAX_PETS
+    ) {
+
+      showMessage(
+        "❌ BASE FULL!"
+      );
+
+      return;
+
+    }
+
+
+    opened =
+      true;
+
+
+    const reward =
+      getLuckyBlockReward(
+        block
+      );
+
+
+    ownedPets.push({
+
+      id:
+        Date.now() +
+        Math.random(),
+
+      name:
+        reward.name,
+
+      emoji:
+        reward.emoji,
+
+      rarity:
+        reward.rarity,
+
+      mutation:
+        "Normal",
+
+      mutationEmoji:
+        "",
+
+      multiplier:
+        1,
+
+      eventEffect:
+        null,
+
+      eventName:
+        null,
+
+      eventEmoji:
+        "",
+
+      eventMultiplier:
+        1,
+
+      income:
+        reward.income,
+
+      stored:
+        0,
+
+      fusion:
+        false,
+
+      luckyBlock:
+        type
+
+    });
+
+
+    card.remove();
+
+
+    updateGame();
+
+    scanOwnedPetsForIndex();
+
+
+    showMessage(
+      block.emoji +
+      " YOU GOT " +
+      reward.emoji +
+      " " +
+      reward.name +
+      "!"
+    );
+
+  }
+
+
+  const button =
+    card.querySelector(
+      ".buy-btn"
+    );
+
+
+  if (button) {
+
+    button.onclick =
+      function(event) {
+
+        event.stopPropagation();
+
+        openLuckyBlock();
+
+      };
+
+  }
+
+
+  card.onclick =
+    openLuckyBlock;
+
+
+  setTimeout(
+    function() {
+
+      if (
+        card.parentNode &&
+        !opened
+      ) {
+
+        card.remove();
+
+      }
+
+    },
+
+    13000
+  );
+
+}
+/* =========================================================
+   ADMIN LUCKY BLOCK BUTTONS
+   APPEND ONLY
+========================================================= */
+
+window.addEventListener(
+  "load",
+  function() {
+
+    const adminPanel =
+      document.querySelector(
+        ".admin-panel"
+      );
+
+
+    if (!adminPanel) {
+      return;
+    }
+
+
+    if (
+      document.getElementById(
+        "adminLuckyBlockSection"
+      )
+    ) {
+      return;
+    }
+
+
+    const section =
+      document.createElement(
+        "div"
+      );
+
+
+    section.id =
+      "adminLuckyBlockSection";
+
+
+    section.className =
+      "admin-section";
+
+
+    section.innerHTML = `
+
+      <div class="admin-section-title">
+        🎁 LUCKY BLOCKS
+      </div>
+
+      <div class="admin-grid">
+
+        <button
+          id="adminSpawnMythicBlock"
+          class="admin-action"
+          type="button"
+        >
+          🎁
+          <span>MYTHIC</span>
+        </button>
+
+        <button
+          id="adminSpawnGodlyBlock"
+          class="admin-action"
+          type="button"
+        >
+          ⚡🎁
+          <span>GODLY</span>
+        </button>
+
+        <button
+          id="adminSpawnSecretBlock"
+          class="admin-action"
+          type="button"
+        >
+          🌌🎁
+          <span>SECRET</span>
+        </button>
+
+      </div>
+
+    `;
+
+
+    adminPanel.appendChild(
+      section
+    );
+
+
+    const mythicButton =
+      document.getElementById(
+        "adminSpawnMythicBlock"
+      );
+
+
+    const godlyButton =
+      document.getElementById(
+        "adminSpawnGodlyBlock"
+      );
+
+
+    const secretButton =
+      document.getElementById(
+        "adminSpawnSecretBlock"
+      );
+
+
+    if (mythicButton) {
+
+      mythicButton.onclick =
+        function() {
+
+          spawnLuckyBlockByType(
+            "mythic"
+          );
+
+        };
+
+    }
+
+
+    if (godlyButton) {
+
+      godlyButton.onclick =
+        function() {
+
+          spawnLuckyBlockByType(
+            "godly"
+          );
+
+        };
+
+    }
+
+
+    if (secretButton) {
+
+      secretButton.onclick =
+        function() {
+
+          spawnLuckyBlockByType(
+            "secret"
+          );
+
+        };
+
+    }
+
+  }
+);
+/* =========================================================
+   FIX ADMIN LUCKY BLOCK BUTTONS
+   APPEND ONLY
+========================================================= */
+
+document.addEventListener(
+  "click",
+  function(event) {
+
+    const button =
+      event.target.closest(
+        "#adminSpawnMythicBlock, #adminSpawnGodlyBlock, #adminSpawnSecretBlock"
+      );
+
+
+    if (!button) {
+      return;
+    }
+
+
+    event.preventDefault();
+    event.stopPropagation();
+
+
+    let type =
+      null;
+
+
+    if (
+      button.id ===
+      "adminSpawnMythicBlock"
+    ) {
+
+      type =
+        "mythic";
+
+    }
+
+
+    if (
+      button.id ===
+      "adminSpawnGodlyBlock"
+    ) {
+
+      type =
+        "godly";
+
+    }
+
+
+    if (
+      button.id ===
+      "adminSpawnSecretBlock"
+    ) {
+
+      type =
+        "secret";
+
+    }
+
+
+    if (!type) {
+      return;
+    }
+
+
+    console.log(
+      "ADMIN LUCKY BLOCK:",
+      type
+    );
+
+
+    if (
+      typeof spawnLuckyBlockByType !==
+      "function"
+    ) {
+
+      console.error(
+        "spawnLuckyBlockByType NOT FOUND"
+      );
+
+
+      showMessage(
+        "❌ LUCKY BLOCK SPAWNER NOT FOUND"
+      );
+
+      return;
+    }
+
+
+    spawnLuckyBlockByType(
+      type
+    );
+
+
+    showMessage(
+      "🎁 " +
+      type.toUpperCase() +
+      " LUCKY BLOCK SPAWNED!"
+    );
+
+  },
+
+  true
+);
+/* =========================================================
+   LUCKY BLOCK REWARD FIX
+   APPEND ONLY
+========================================================= */
+
+function getLuckyBlockReward(block) {
+
+  if (
+    !block ||
+    !Array.isArray(block.pets) ||
+    block.pets.length === 0
+  ) {
+    return null;
+  }
+
+  const roll = Math.random() * 100;
+
+  let currentChance = 0;
+
+  for (const pet of block.pets) {
+
+    currentChance +=
+      Number(pet.chance || 0);
+
+    if (roll < currentChance) {
+      return pet;
+    }
+
+  }
+
+  // fallback
+  return block.pets[
+    block.pets.length - 1
+  ];
+}
+
+console.log(
+  "🎁 LUCKY BLOCK REWARD SYSTEM READY"
+);
+/* =========================================================
+   GODLY + SECRET LUCKY BLOCK FIX
+   APPEND ONLY
+========================================================= */
+
+luckyBlocks.godly = {
+  id: "godly",
+  name: "GODLY LUCKY BLOCK",
+  emoji: "⚡🎁",
+  rarity: "godly",
+
+  pets: [
+    {
+      name: "Thunder Titan",
+      emoji: "⚡🦍",
+      rarity: "godly",
+      income: 800000,
+      chance: 70
+    },
+    {
+      name: "Solar Dragon",
+      emoji: "☀️🐲",
+      rarity: "godly",
+      income: 1500000,
+      chance: 25
+    },
+    {
+      name: "Celestial Leviathan",
+      emoji: "✨🐋",
+      rarity: "godly",
+      income: 3000000,
+      chance: 5
+    }
+  ]
+};
+
+
+luckyBlocks.secret = {
+  id: "secret",
+  name: "SECRET LUCKY BLOCK",
+  emoji: "🌌🎁",
+  rarity: "secret",
+
+  pets: [
+    {
+      name: "Void Emperor",
+      emoji: "🌌👑",
+      rarity: "secret",
+      income: 10000000,
+      chance: 80
+    },
+    {
+      name: "Chrono Beast",
+      emoji: "⏳👹",
+      rarity: "secret",
+      income: 25000000,
+      chance: 19
+    },
+    {
+      name: "Reality Destroyer",
+      emoji: "🌀🐲",
+      rarity: "secret",
+      income: 100000000,
+      chance: 1
+    }
+  ]
+};
+
+console.log(
+  "⚡ GODLY READY:",
+  luckyBlocks.godly
+);
+
+console.log(
+  "🌌 SECRET READY:",
+  luckyBlocks.secret
+);
+/* =========================================================
+   LUCKY BLOCK FULL SCREEN OPENING
+   MYTHIC + GODLY + SECRET
+   APPEND ONLY
+========================================================= */
+
+function openLuckyBlockScreen(
+  block,
+  reward
+) {
+
+  const overlay =
+    document.getElementById(
+      "luckyOpenOverlay"
+    );
+
+  const gift =
+    document.getElementById(
+      "luckyGift"
+    );
+
+  const tapText =
+    document.getElementById(
+      "luckyTapText"
+    );
+
+  const reveal =
+    document.getElementById(
+      "luckyRewardReveal"
+    );
+
+
+  if (
+    !overlay ||
+    !gift ||
+    !tapText ||
+    !reveal
+  ) {
+
+    console.error(
+      "LUCKY OPENING HTML NOT FOUND"
+    );
+
+    return;
+  }
+
+
+  let taps = 0;
+
+
+  overlay.classList.remove(
+    "hidden"
+  );
+
+
+  reveal.classList.add(
+    "hidden"
+  );
+
+
+  gift.classList.remove(
+    "hidden"
+  );
+
+
+  tapText.classList.remove(
+    "hidden"
+  );
+
+
+  gift.textContent =
+    block.emoji || "🎁";
+
+
+  tapText.textContent =
+    "TAP 3 TIMES!";
+
+
+  /*
+    DIFFERENT LOOK
+    FOR EACH BLOCK
+  */
+
+  if (
+    block.id === "mythic"
+  ) {
+
+    gift.style.filter =
+      "drop-shadow(0 0 35px #b05cff)";
+
+  }
+
+
+  if (
+    block.id === "godly"
+  ) {
+
+    gift.style.filter =
+      "drop-shadow(0 0 40px #ffe74f)";
+
+  }
+
+
+  if (
+    block.id === "secret"
+  ) {
+
+    gift.style.filter =
+      "drop-shadow(0 0 45px #d35cff)";
+
+  }
+
+
+  gift.onclick =
+    function() {
+
+      taps++;
+
+
+      /*
+        HIT ANIMATION
+      */
+
+      gift.classList.remove(
+        "hit"
+      );
+
+
+      void gift.offsetWidth;
+
+
+      gift.classList.add(
+        "hit"
+      );
+
+
+      const left =
+        3 - taps;
+
+
+      if (
+        left > 0
+      ) {
+
+        tapText.textContent =
+          "TAP " +
+          left +
+          " MORE!";
+
+      }
+
+
+      /*
+        THIRD TAP
+      */
+
+      if (
+        taps >= 3
+      ) {
+
+        gift.onclick =
+          null;
+
+
+        gift.classList.add(
+          "hidden"
+        );
+
+
+        tapText.classList.add(
+          "hidden"
+        );
+
+
+        reveal.innerHTML = `
+
+          <div>
+            ${reward.emoji}
+          </div>
+
+          <div class="lucky-reward-name">
+            ${reward.name}
+          </div>
+
+          <div class="lucky-reward-name">
+            ${reward.rarity.toUpperCase()}
+          </div>
+
+        `;
+
+
+        reveal.classList.remove(
+          "hidden"
+        );
+
+
+        /*
+          GIVE PET
+        */
+
+        ownedPets.push({
+
+          id:
+            Date.now() +
+            Math.random(),
+
+          name:
+            reward.name,
+
+          emoji:
+            reward.emoji,
+
+          rarity:
+            reward.rarity,
+
+          mutation:
+            "Normal",
+
+          mutationEmoji:
+            "",
+
+          multiplier:
+            1,
+
+          eventEffect:
+            null,
+
+          eventName:
+            null,
+
+          eventEmoji:
+            "",
+
+          eventMultiplier:
+            1,
+
+          income:
+            reward.income,
+
+          stored:
+            0,
+
+          fusion:
+            false,
+
+          luckyBlock:
+            block.id
+
+        });
+
+
+        updateGame();
+
+        scanOwnedPetsForIndex();
+
+
+        /*
+          CLOSE AFTER REVEAL
+        */
+
+        setTimeout(
+          function() {
+
+            overlay.classList.add(
+              "hidden"
+            );
+
+
+            reveal.classList.add(
+              "hidden"
+            );
+
+
+            gift.classList.remove(
+              "hidden"
+            );
+
+          },
+
+          3000
+        );
+
+      }
+
+    };
+
+}
+
+
+/* =========================================================
+   REPLACE GENERIC LUCKY BLOCK SPAWNER
+========================================================= */
+
+spawnLuckyBlockByType =
+  function(type) {
+
+    const block =
+      luckyBlocks[type];
+
+
+    if (!block) {
+
+      showMessage(
+        "❌ LUCKY BLOCK NOT FOUND"
+      );
+
+      return;
+    }
+
+
+    const carpet =
+      document.getElementById(
+        "carpet"
+      );
+
+
+    if (!carpet) {
+      return;
+    }
+
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.className =
+      "walking-pet " +
+      block.rarity;
+
+
+    card.innerHTML = `
+
+      <div class="walk-emoji">
+        ${block.emoji}
+      </div>
+
+      <div class="walk-name">
+        ${block.name}
+      </div>
+
+      <div class="walk-rarity">
+        ${block.rarity.toUpperCase()}
+      </div>
+
+      <div class="walk-income">
+        🎁 3 PETS INSIDE
+      </div>
+
+      <button
+        class="buy-btn"
+        type="button"
+      >
+        OPEN
+      </button>
+
+    `;
+
+
+    carpet.appendChild(
+      card
+    );
+
+
+    let opened = false;
+
+
+    function startOpening() {
+
+      if (opened) {
+        return;
+      }
+
+
+      if (
+        ownedPets.length >=
+        MAX_PETS
+      ) {
+
+        showMessage(
+          "❌ BASE FULL!"
+        );
+
+        return;
+      }
+
+
+      opened = true;
+
+
+      const reward =
+        getLuckyBlockReward(
+          block
+        );
+
+
+      if (!reward) {
+
+        showMessage(
+          "❌ REWARD ERROR"
+        );
+
+        opened = false;
+
+        return;
+      }
+
+
+      card.remove();
+
+
+      openLuckyBlockScreen(
+        block,
+        reward
+      );
+
+    }
+
+
+    const button =
+      card.querySelector(
+        ".buy-btn"
+      );
+
+
+    if (button) {
+
+      button.onclick =
+        function(event) {
+
+          event.stopPropagation();
+
+          startOpening();
+
+        };
+
+    }
+
+
+    card.onclick =
+      startOpening;
+
+
+    setTimeout(
+      function() {
+
+        if (
+          card.parentNode &&
+          !opened
+        ) {
+
+          card.remove();
+
+        }
+
+      },
+
+      13000
+    );
+
+  };
+
+
+/* =========================================================
+   MAKE NORMAL MYTHIC SPAWN USE NEW SYSTEM TOO
+========================================================= */
+
+spawnMythicLuckyBlock =
+  function() {
+
+    spawnLuckyBlockByType(
+      "mythic"
+    );
+
+  };
+
+
+console.log(
+  "🎁 FULL LUCKY BLOCK OPENING READY"
+);
+/* =========================================================
+   LUCKY REWARD CHANCE DISPLAY
+   APPEND ONLY
+========================================================= */
+
+const oldOpenLuckyBlockScreen =
+  openLuckyBlockScreen;
+
+
+openLuckyBlockScreen =
+  function(
+    block,
+    reward
+  ) {
+
+    const overlay =
+      document.getElementById(
+        "luckyOpenOverlay"
+      );
+
+    const gift =
+      document.getElementById(
+        "luckyGift"
+      );
+
+    const tapText =
+      document.getElementById(
+        "luckyTapText"
+      );
+
+    const reveal =
+      document.getElementById(
+        "luckyRewardReveal"
+      );
+
+
+    if (
+      !overlay ||
+      !gift ||
+      !tapText ||
+      !reveal
+    ) {
+      return;
+    }
+
+
+    let taps =
+      0;
+
+
+    overlay.classList.remove(
+      "hidden"
+    );
+
+    reveal.classList.add(
+      "hidden"
+    );
+
+    gift.classList.remove(
+      "hidden"
+    );
+
+    tapText.classList.remove(
+      "hidden"
+    );
+
+
+    gift.textContent =
+      block.emoji || "🎁";
+
+
+    tapText.textContent =
+      "TAP 3 TIMES!";
+
+
+    gift.onclick =
+      function() {
+
+        taps++;
+
+
+        gift.classList.remove(
+          "hit"
+        );
+
+        void gift.offsetWidth;
+
+        gift.classList.add(
+          "hit"
+        );
+
+
+        const left =
+          3 - taps;
+
+
+        if (
+          left > 0
+        ) {
+
+          tapText.textContent =
+            "TAP " +
+            left +
+            " MORE!";
+
+        }
+
+
+        if (
+          taps < 3
+        ) {
+          return;
+        }
+
+
+        gift.onclick =
+          null;
+
+
+        gift.classList.add(
+          "hidden"
+        );
+
+        tapText.classList.add(
+          "hidden"
+        );
+
+
+        reveal.innerHTML = `
+
+          <div>
+            ${reward.emoji}
+          </div>
+
+          <div class="lucky-reward-name">
+            ${reward.name}
+          </div>
+
+          <div class="lucky-reward-name">
+            ${reward.rarity.toUpperCase()}
+          </div>
+
+          <div
+            class="lucky-reward-name"
+            style="
+              font-size:22px;
+              margin-top:10px;
+            "
+          >
+            ✨ ${reward.chance}% CHANCE
+          </div>
+
+        `;
+
+
+        reveal.classList.remove(
+          "hidden"
+        );
+
+
+        ownedPets.push({
+
+          id:
+            Date.now() +
+            Math.random(),
+
+          name:
+            reward.name,
+
+          emoji:
+            reward.emoji,
+
+          rarity:
+            reward.rarity,
+
+          mutation:
+            "Normal",
+
+          mutationEmoji:
+            "",
+
+          multiplier:
+            1,
+
+          eventEffect:
+            null,
+
+          eventName:
+            null,
+
+          eventEmoji:
+            "",
+
+          eventMultiplier:
+            1,
+
+          income:
+            reward.income,
+
+          stored:
+            0,
+
+          fusion:
+            false,
+
+          luckyBlock:
+            block.id
+
+        });
+
+
+        updateGame();
+
+        scanOwnedPetsForIndex();
+
+
+        setTimeout(
+          function() {
+
+            overlay.classList.add(
+              "hidden"
+            );
+
+            reveal.classList.add(
+              "hidden"
+            );
+
+            gift.classList.remove(
+              "hidden"
+            );
+
+          },
+
+          3000
+        );
+
+      };
+
+  };
+
+
+console.log(
+  "🎁 LUCKY REWARD CHANCE DISPLAY READY"
+);
+/* =========================================================
+   ADMIN ACTION CENTER NOTIFICATIONS
+   APPEND ONLY
+========================================================= */
+
+let adminActionWatcherReady =
+  false;
+
+let lastAdminEvent =
+  null;
+
+let lastAdminEventEndsAt =
+  0;
+
+let lastAdminLuck =
+  0;
+
+let lastAdminLuckEndsAt =
+  0;
+
+
+function checkAdminServerActions() {
+
+  if (!serverState) {
+    return;
+  }
+
+
+  const now =
+    Date.now();
+
+
+  const eventName =
+    String(
+      serverState.activeEvent ||
+      "none"
+    ).toLowerCase();
+
+
+  const eventEndsAt =
+    Number(
+      serverState.eventEndsAt ||
+      0
+    );
+
+
+  const lucky =
+    Number(
+      serverState.luckyPercent ||
+      serverState.luckPercent ||
+      0
+    );
+
+
+  const luckyEndsAt =
+    Number(
+      serverState.luckyEndsAt ||
+      serverState.luckEndsAt ||
+      0
+    );
+
+
+  /*
+     FIRST LOAD
+
+     Remember current state without
+     showing old actions again.
+  */
+
+  if (
+    !adminActionWatcherReady
+  ) {
+
+    lastAdminEvent =
+      eventName;
+
+    lastAdminEventEndsAt =
+      eventEndsAt;
+
+    lastAdminLuck =
+      lucky;
+
+    lastAdminLuckEndsAt =
+      luckyEndsAt;
+
+    adminActionWatcherReady =
+      true;
+
+    return;
+  }
+
+
+  /* =====================================================
+     NEW EVENT
+  ===================================================== */
+
+  if (
+    eventName !== "none" &&
+    eventEndsAt > now &&
+    (
+      eventName !==
+        lastAdminEvent ||
+
+      eventEndsAt !==
+        lastAdminEventEndsAt
+    )
+  ) {
+
+    const event =
+      gameEvents.find(
+        function(item) {
+
+          return (
+            item.id ===
+            eventName
+          );
+
+        }
+      );
+
+
+    if (event) {
+
+      showServerAnnouncement(
+
+        event.emoji +
+        " " +
+        event.name +
+        " EVENT STARTED! ×3 MONEY"
+
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     EVENT STOPPED
+  ===================================================== */
+
+  if (
+    lastAdminEvent &&
+    lastAdminEvent !== "none" &&
+    eventName === "none"
+  ) {
+
+    showServerAnnouncement(
+      "⛔ SERVER EVENT ENDED"
+    );
+
+  }
+
+
+  /* =====================================================
+     NEW LUCK
+  ===================================================== */
+
+  if (
+    lucky > 0 &&
+    luckyEndsAt > now &&
+    (
+      lucky !==
+        lastAdminLuck ||
+
+      luckyEndsAt !==
+        lastAdminLuckEndsAt
+    )
+  ) {
+
+    showServerAnnouncement(
+
+      "🍀 " +
+      lucky +
+      "% SERVER LUCK ACTIVATED!"
+
+    );
+
+  }
+
+
+  /* =====================================================
+     LUCK STOPPED
+  ===================================================== */
+
+  if (
+    lastAdminLuck > 0 &&
+    lucky <= 0
+  ) {
+
+    showServerAnnouncement(
+      "⛔ SERVER LUCK ENDED"
+    );
+
+  }
+
+
+  /*
+     SAVE CURRENT STATE
+  */
+
+  lastAdminEvent =
+    eventName;
+
+  lastAdminEventEndsAt =
+    eventEndsAt;
+
+  lastAdminLuck =
+    lucky;
+
+  lastAdminLuckEndsAt =
+    luckyEndsAt;
+
+}
+
+
+/* CHECK EVERY SECOND */
+
+setInterval(
+  checkAdminServerActions,
+  1000
+);
+
+
+console.log(
+  "👑 ADMIN ACTION NOTIFICATIONS READY"
+);
+/* =========================================================
+   GAME MUSIC
+   APPEND ONLY
+========================================================= */
+
+const gameMusic =
+  document.getElementById(
+    "gameMusic"
+  );
+
+const musicToggle =
+  document.getElementById(
+    "musicToggle"
+  );
+
+let musicStarted =
+  false;
+
+let musicEnabled =
+  true;
+
+
+async function startGameMusic() {
+
+  if (
+    !gameMusic ||
+    !musicEnabled
+  ) {
+    return;
+  }
+
+  try {
+
+    gameMusic.volume =
+      0.35;
+
+    await gameMusic.play();
+
+    musicStarted =
+      true;
+
+  }
+
+  catch (error) {
+
+    console.log(
+      "Music waiting for user interaction."
+    );
+
+  }
+
+}
+
+
+document.addEventListener(
+  "click",
+  function() {
+
+    if (
+      !musicStarted &&
+      musicEnabled
+    ) {
+
+      startGameMusic();
+
+    }
+
+  },
+  {
+    once: true
+  }
+);
+
+
+if (musicToggle) {
+
+  musicToggle.onclick =
+    async function(event) {
+
+      event.stopPropagation();
+
+      musicEnabled =
+        !musicEnabled;
+
+
+      if (!gameMusic) {
+        return;
+      }
+
+
+      if (musicEnabled) {
+
+        musicToggle.textContent =
+          "🔊";
+
+        await startGameMusic();
+
+      }
+
+      else {
+
+        gameMusic.pause();
+
+        musicToggle.textContent =
+          "🔇";
+
+      }
+
+    };
+
+}
+/* =========================================================
+   LUCKY BLOCK VOICE
+   APPEND ONLY
+========================================================= */
+
+function sayLuckyBlock() {
+
+  try {
+
+    const speech =
+      new SpeechSynthesisUtterance(
+        "Lucky Block!"
+      );
+
+    speech.rate =
+      1;
+
+    speech.pitch =
+      1.1;
+
+    speech.volume =
+      1;
+
+
+    window.speechSynthesis.cancel();
+
+    window.speechSynthesis.speak(
+      speech
+    );
+
+  }
+
+  catch (error) {
+
+    console.log(
+      "Lucky Block voice failed:",
+      error
+    );
+
+  }
+
+}
+/* =========================================================
+   TEST LUCKY BLOCK VOICE
+========================================================= */
+
+document.addEventListener(
+  "click",
+  function testLuckyVoiceOnce() {
+
+    const speech =
+      new SpeechSynthesisUtterance(
+        "Lucky Block!"
+      );
+
+    speech.volume = 1;
+    speech.rate = 0.9;
+    speech.pitch = 1;
+
+    window.speechSynthesis.speak(
+      speech
+    );
+
+    document.removeEventListener(
+      "click",
+      testLuckyVoiceOnce
+    );
+
+  }
+);
+
