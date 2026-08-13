@@ -11284,14 +11284,54 @@ document.addEventListener(
   }
 );
 /* =========================================================
-   ALL SERVER LUCKY BLOCKS
-   MYTHIC + GODLY + SECRET
+   ALL SERVER LUCKY BLOCKS - CLEAN FIX
    APPEND ONLY
 ========================================================= */
 
+async function sendLuckyBlockToServer(type) {
+
+  try {
+
+    const admin =
+      await p6CheckAdmin();
+
+    if (!admin) {
+      showMessage("❌ NOT ADMIN");
+      return;
+    }
+
+    await sendServerCommand({
+
+      commandType:
+        "spawnLuckyBlock",
+
+      petName:
+        type
+
+    });
+
+    p6AdminMessage(
+      "🌍 " +
+      type.toUpperCase() +
+      " LUCKY BLOCK SENT!"
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "LUCKY BLOCK SERVER SEND ERROR:",
+      error
+    );
+
+  }
+
+}
+
 
 /* =========================================================
-   ADMIN SEND LUCKY BLOCK TO SERVER
+   ADMIN BUTTON ROUTER
 ========================================================= */
 
 document.addEventListener(
@@ -11304,35 +11344,12 @@ document.addEventListener(
         "#adminSpawnMythicBlock, #adminSpawnGodlyBlock, #adminSpawnSecretBlock"
       );
 
-
     if (!button) {
       return;
     }
 
 
-    /*
-      ME MODE:
-      let the existing button code work normally
-    */
-
-    if (
-      typeof p6Target === "undefined" ||
-      p6Target !== "server"
-    ) {
-      return;
-    }
-
-
-    /*
-      SERVER MODE:
-      stop the local spawn
-    */
-
-    event.preventDefault();
-    event.stopImmediatePropagation();
-
-
-    let type = "";
+    let type = null;
 
 
     if (
@@ -11364,58 +11381,45 @@ document.addEventListener(
     }
 
 
-    try {
+    /*
+      ME
+    */
 
-      await sendServerCommand({
+    if (
+      p6Target === "me"
+    ) {
 
-        commandType:
-          "spawnLuckyBlock",
-
-        petName:
-          type
-
-      });
-
-
-      p6AdminMessage(
-        "🌍 " +
-        type.toUpperCase() +
-        " LUCKY BLOCK SENT TO ALL!"
+      spawnLuckyBlockByType(
+        type
       );
 
+      return;
+    }
 
-      console.log(
-        "SERVER LUCKY BLOCK SENT:",
+
+    /*
+      ALL SERVER
+    */
+
+    if (
+      p6Target === "server"
+    ) {
+
+      await sendLuckyBlockToServer(
         type
       );
 
     }
 
-    catch (error) {
-
-      console.error(
-        "SERVER LUCKY BLOCK SEND ERROR:",
-        error
-      );
-
-
-      showMessage(
-        "❌ LUCKY BLOCK SEND FAILED"
-      );
-
-    }
-
-  },
-
-  true
+  }
 );
 
 
 /* =========================================================
-   RECEIVE NEW SERVER LUCKY BLOCKS
+   RECEIVE ALL SERVER LUCKY BLOCKS
 ========================================================= */
 
-async function checkNewestLuckyBlockCommands() {
+async function receiveNewestLuckyBlocks() {
 
   try {
 
@@ -11476,19 +11480,13 @@ async function checkNewestLuckyBlockCommands() {
         }
 
 
-        const storageKey =
-          "serverLuckyBlock_" +
+        const key =
+          "receivedLuckyBlock_" +
           commandId;
 
 
-        /*
-          DON'T SPAWN SAME COMMAND TWICE
-        */
-
         if (
-          localStorage.getItem(
-            storageKey
-          )
+          localStorage.getItem(key)
         ) {
           return;
         }
@@ -11501,34 +11499,26 @@ async function checkNewestLuckyBlockCommands() {
 
 
         if (
-          type !== "mythic" &&
-          type !== "godly" &&
-          type !== "secret"
+          ![
+            "mythic",
+            "godly",
+            "secret"
+          ].includes(type)
         ) {
-
-          console.log(
-            "UNKNOWN LUCKY BLOCK:",
-            type
-          );
-
           return;
         }
 
 
         /*
-          MARK USED BEFORE SPAWNING
-          prevents duplicates
+          MARK FIRST
+          SO IT CAN'T SPAWN TWICE
         */
 
         localStorage.setItem(
-          storageKey,
+          key,
           "1"
         );
 
-
-        /*
-          SPAWN ON THIS PLAYER'S CARPET
-        */
 
         spawnLuckyBlockByType(
           type
@@ -11538,14 +11528,7 @@ async function checkNewestLuckyBlockCommands() {
         showMessage(
           "🌍 " +
           type.toUpperCase() +
-          " LUCKY BLOCK SPAWNED!"
-        );
-
-
-        console.log(
-          "SERVER LUCKY BLOCK RECEIVED:",
-          commandId,
-          type
+          " LUCKY BLOCK!"
         );
 
       }
@@ -11556,7 +11539,7 @@ async function checkNewestLuckyBlockCommands() {
   catch (error) {
 
     console.error(
-      "SERVER LUCKY BLOCK RECEIVE ERROR:",
+      "LUCKY BLOCK SERVER RECEIVE ERROR:",
       error
     );
 
@@ -11565,14 +11548,10 @@ async function checkNewestLuckyBlockCommands() {
 }
 
 
-/* CHECK NOW */
+receiveNewestLuckyBlocks();
 
-checkNewestLuckyBlockCommands();
-
-
-/* CHECK EVERY 3 SECONDS */
 
 setInterval(
-  checkNewestLuckyBlockCommands,
+  receiveNewestLuckyBlocks,
   3000
 );
