@@ -11555,3 +11555,1347 @@ setInterval(
   receiveNewestLuckyBlocks,
   3000
 );
+READY"
+);
+
+/* =========================================================
+   TACO EVENT
+========================================================= */
+
+if (
+  !gameEvents.find(
+    function(event) {
+      return event.id === "taco";
+    }
+  )
+) {
+
+  gameEvents.push({
+
+    id: "taco",
+
+    name: "TACO",
+
+    emoji: "🌮",
+
+    particle: "🌮",
+
+    multiplier: 4
+
+  });
+
+}
+
+
+/* =========================================================
+   EVENT MULTIPLIER
+========================================================= */
+
+function gypGetEventMultiplier(event) {
+
+  if (
+    event &&
+    event.id === "taco"
+  ) {
+
+    return 4;
+
+  }
+
+  return 3;
+
+}
+
+
+/* =========================================================
+   FIX EVENT DISPLAY
+========================================================= */
+
+const gypOldUpdateEventDisplay =
+  updateEventDisplay;
+
+
+updateEventDisplay =
+  function() {
+
+    gypOldUpdateEventDisplay();
+
+
+    const active =
+      getActiveEvent();
+
+
+    if (!active) {
+      return;
+    }
+
+
+    const description =
+      document.getElementById(
+        "eventDescription"
+      );
+
+
+    if (!description) {
+      return;
+    }
+
+
+    const multiplier =
+      gypGetEventMultiplier(
+        active.event
+      );
+
+
+    description.textContent =
+
+      active.source === "server"
+
+        ? "🌍 SERVER EVENT • 30% HIT • ×" +
+          multiplier +
+          " MONEY"
+
+        : "👑 ADMIN EVENT • 30% HIT • ×" +
+          multiplier +
+          " MONEY";
+
+  };
+
+
+/* =========================================================
+   FIX EVENT HIT TEXT
+========================================================= */
+
+playEventHit =
+  function(
+    card,
+    event
+  ) {
+
+    if (
+      !card ||
+      !event
+    ) {
+      return;
+    }
+
+
+    const multiplier =
+      gypGetEventMultiplier(
+        event
+      );
+
+
+    card.classList.add(
+      "event-impact"
+    );
+
+
+    const hitText =
+      document.createElement(
+        "div"
+      );
+
+
+    hitText.className =
+      "event-hit-text";
+
+
+    hitText.textContent =
+
+      event.emoji +
+      " " +
+      event.name +
+      " HIT! ×" +
+      multiplier;
+
+
+    card.appendChild(
+      hitText
+    );
+
+
+    setTimeout(
+      function() {
+
+        if (
+          hitText.parentNode
+        ) {
+
+          hitText.remove();
+
+        }
+
+
+        card.classList.remove(
+          "event-impact"
+        );
+
+      },
+
+      1000
+    );
+
+  };
+
+
+/* =========================================================
+   LUCKY BLOCK REWARD
+========================================================= */
+
+getLuckyBlockReward =
+  function(block) {
+
+    if (
+      !block ||
+      !Array.isArray(
+        block.pets
+      ) ||
+      block.pets.length === 0
+    ) {
+
+      return null;
+
+    }
+
+
+    const roll =
+      Math.random() * 100;
+
+
+    let total =
+      0;
+
+
+    for (
+      const pet
+      of block.pets
+    ) {
+
+      total +=
+        Number(
+          pet.chance || 0
+        );
+
+
+      if (
+        roll < total
+      ) {
+
+        return pet;
+
+      }
+
+    }
+
+
+    return block.pets[
+      block.pets.length - 1
+    ];
+
+  };
+
+
+/* =========================================================
+   FIX LUCKY BLOCK SPAWNER
+========================================================= */
+
+spawnLuckyBlockByType =
+  function(type) {
+
+    const block =
+      luckyBlocks[type];
+
+
+    if (!block) {
+
+      showMessage(
+        "❌ LUCKY BLOCK NOT FOUND"
+      );
+
+      return;
+
+    }
+
+
+    const carpet =
+      document.getElementById(
+        "carpet"
+      );
+
+
+    if (!carpet) {
+      return;
+    }
+
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.className =
+      "walking-pet " +
+      block.rarity;
+
+
+    card.innerHTML = `
+
+      <div class="walk-emoji">
+
+        ${block.emoji}
+
+      </div>
+
+      <div class="walk-name">
+
+        ${block.name}
+
+      </div>
+
+      <div class="walk-rarity">
+
+        ${block.rarity.toUpperCase()}
+
+      </div>
+
+      <div class="walk-income">
+
+        🎁 3 PETS INSIDE
+
+      </div>
+
+      <button
+        class="buy-btn"
+        type="button"
+      >
+
+        OPEN
+
+      </button>
+
+    `;
+
+
+    carpet.appendChild(
+      card
+    );
+
+
+    let opened =
+      false;
+
+
+    function openBlock() {
+
+      if (opened) {
+        return;
+      }
+
+
+      if (
+        ownedPets.length >=
+        MAX_PETS
+      ) {
+
+        showMessage(
+          "❌ BASE FULL!"
+        );
+
+        return;
+      }
+
+
+      const reward =
+        getLuckyBlockReward(
+          block
+        );
+
+
+      if (!reward) {
+
+        showMessage(
+          "❌ REWARD ERROR"
+        );
+
+        return;
+      }
+
+
+      opened =
+        true;
+
+
+      card.remove();
+
+
+      /*
+         USE FULL SCREEN OPENING
+         IF IT EXISTS
+      */
+
+      if (
+        typeof openLuckyBlockScreen ===
+        "function"
+      ) {
+
+        openLuckyBlockScreen(
+          block,
+          reward
+        );
+
+        return;
+
+      }
+
+
+      /*
+         FALLBACK
+      */
+
+      ownedPets.push({
+
+        id:
+          Date.now() +
+          Math.random(),
+
+        name:
+          reward.name,
+
+        emoji:
+          reward.emoji,
+
+        rarity:
+          reward.rarity,
+
+        mutation:
+          "Normal",
+
+        mutationEmoji:
+          "",
+
+        multiplier:
+          1,
+
+        eventEffect:
+          null,
+
+        eventName:
+          null,
+
+        eventEmoji:
+          "",
+
+        eventMultiplier:
+          1,
+
+        income:
+          reward.income,
+
+        stored:
+          0,
+
+        fusion:
+          false,
+
+        luckyBlock:
+          type
+
+      });
+
+
+      updateGame();
+
+      scanOwnedPetsForIndex();
+
+
+      showMessage(
+
+        "🎁 YOU GOT " +
+        reward.emoji +
+        " " +
+        reward.name
+
+      );
+
+    }
+
+
+    const button =
+      card.querySelector(
+        ".buy-btn"
+      );
+
+
+    if (button) {
+
+      button.onclick =
+        function(event) {
+
+          event.stopPropagation();
+
+          openBlock();
+
+        };
+
+    }
+
+
+    card.onclick =
+      openBlock;
+
+
+    setTimeout(
+      function() {
+
+        if (
+          card.parentNode &&
+          !opened
+        ) {
+
+          card.remove();
+
+        }
+
+      },
+
+      13000
+    );
+
+  };
+
+
+/* =========================================================
+   NORMAL MYTHIC LUCKY SPAWN
+========================================================= */
+
+spawnMythicLuckyBlock =
+  function() {
+
+    spawnLuckyBlockByType(
+      "mythic"
+    );
+
+  };
+
+
+/* =========================================================
+   FIX SPAWN PET
+   TACO = x4
+   OTHER EVENTS = x3
+   MYTHIC LUCKY = 1%
+========================================================= */
+
+spawnPet =
+  function() {
+
+    const carpet =
+      document.getElementById(
+        "carpet"
+      );
+
+
+    if (!carpet) {
+      return;
+    }
+
+
+    /*
+       1% MYTHIC LUCKY BLOCK
+    */
+
+    if (
+      Math.random() * 100 < 1
+    ) {
+
+      spawnLuckyBlockByType(
+        "mythic"
+      );
+
+      return;
+
+    }
+
+
+    const pet =
+      choosePet();
+
+
+    const mutation =
+      rollMutation();
+
+
+    const active =
+      getActiveEvent();
+
+
+    currentGameEvent =
+      active
+        ? active.event
+        : null;
+
+
+    let eventHit =
+      null;
+
+
+    if (
+      currentGameEvent &&
+      Math.random() <
+      0.30
+    ) {
+
+      eventHit =
+        currentGameEvent;
+
+    }
+
+
+    const eventMultiplier =
+      eventHit
+        ? gypGetEventMultiplier(
+            eventHit
+          )
+        : 1;
+
+
+    const finalIncome =
+
+      pet.income *
+
+      mutation.multiplier *
+
+      eventMultiplier;
+
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.className =
+      "walking-pet " +
+      pet.rarity;
+
+
+    card.innerHTML = `
+
+      <div class="walk-emoji">
+
+        ${mutation.emoji}
+        ${pet.emoji}
+
+      </div>
+
+
+      <div class="walk-name">
+
+        ${
+          mutation.name !==
+          "Normal"
+
+            ? mutation.name + " "
+
+            : ""
+        }
+
+        ${pet.name}
+
+      </div>
+
+
+      <div class="walk-rarity">
+
+        ${pet.rarity.toUpperCase()}
+
+      </div>
+
+
+      ${
+        eventHit
+
+          ? `
+
+            <div
+              class="event-tag ${eventHit.id}"
+            >
+
+              ${eventHit.emoji}
+              ${eventHit.name}
+              ×${eventMultiplier}
+
+            </div>
+
+          `
+
+          : ""
+      }
+
+
+      <div class="walk-income">
+
+        +$${formatMoney(
+          finalIncome
+        )}/sec
+
+      </div>
+
+
+      <div class="walk-price">
+
+        💰 $${formatMoney(
+          pet.price
+        )}
+
+      </div>
+
+
+      <button
+        class="buy-btn"
+        type="button"
+      >
+
+        BUY
+
+      </button>
+
+    `;
+
+
+    carpet.appendChild(
+      card
+    );
+
+
+    if (eventHit) {
+
+      setTimeout(
+        function() {
+
+          playEventHit(
+            card,
+            eventHit
+          );
+
+        },
+
+        120
+      );
+
+    }
+
+
+    let bought =
+      false;
+
+
+    function buyPet() {
+
+      if (bought) {
+        return;
+      }
+
+
+      if (
+        ownedPets.length >=
+        MAX_PETS
+      ) {
+
+        showMessage(
+          "❌ BASE FULL!"
+        );
+
+        return;
+      }
+
+
+      if (
+        money <
+        pet.price
+      ) {
+
+        showMessage(
+          "💸 NOT ENOUGH MONEY!"
+        );
+
+        return;
+      }
+
+
+      bought =
+        true;
+
+
+      money -=
+        pet.price;
+
+
+      ownedPets.push({
+
+        id:
+          Date.now() +
+          Math.random(),
+
+        name:
+          pet.name,
+
+        emoji:
+          pet.emoji,
+
+        rarity:
+          pet.rarity,
+
+        mutation:
+          mutation.name,
+
+        mutationEmoji:
+          mutation.emoji,
+
+        multiplier:
+          mutation.multiplier,
+
+        eventEffect:
+          eventHit
+            ? eventHit.id
+            : null,
+
+        eventName:
+          eventHit
+            ? eventHit.name
+            : null,
+
+        eventEmoji:
+          eventHit
+            ? eventHit.emoji
+            : "",
+
+        eventMultiplier:
+          eventMultiplier,
+
+        income:
+          finalIncome,
+
+        stored:
+          0,
+
+        fusion:
+          false
+
+      });
+
+
+      card.remove();
+
+
+      updateGame();
+
+      scanOwnedPetsForIndex();
+
+
+      showMessage(
+
+        eventHit
+
+          ? eventHit.emoji +
+            " " +
+            eventHit.name +
+            " ×" +
+            eventMultiplier +
+            " PET!"
+
+          : "🐾 " +
+            pet.name +
+            " BOUGHT!"
+
+      );
+
+    }
+
+
+    const buyButton =
+      card.querySelector(
+        ".buy-btn"
+      );
+
+
+    if (buyButton) {
+
+      buyButton.onclick =
+        function(event) {
+
+          event.stopPropagation();
+
+          buyPet();
+
+        };
+
+    }
+
+
+    card.onclick =
+      buyPet;
+
+
+    setTimeout(
+      function() {
+
+        if (
+          card.parentNode &&
+          !bought
+        ) {
+
+          card.remove();
+
+        }
+
+      },
+
+      13000
+    );
+
+  };
+
+
+/* =========================================================
+   ADD TACO BUTTON TO ADMIN
+========================================================= */
+
+window.addEventListener(
+  "load",
+
+  function() {
+
+    if (
+      document.getElementById(
+        "adminTaco"
+      )
+    ) {
+      return;
+    }
+
+
+    const lava =
+      document.getElementById(
+        "adminLava"
+      );
+
+
+    if (!lava) {
+      return;
+    }
+
+
+    const grid =
+      lava.closest(
+        ".admin-grid"
+      );
+
+
+    if (!grid) {
+      return;
+    }
+
+
+    const button =
+      document.createElement(
+        "button"
+      );
+
+
+    button.id =
+      "adminTaco";
+
+
+    button.className =
+      "admin-action";
+
+
+    button.type =
+      "button";
+
+
+    button.style.background =
+      "linear-gradient(#e8a02c,#8d4311)";
+
+
+    button.innerHTML = `
+
+      🌮
+
+      <span>
+        TACO
+      </span>
+
+    `;
+
+
+    grid.appendChild(
+      button
+    );
+
+
+    button.onclick =
+      function() {
+
+        if (
+          p6Target ===
+          "server"
+        ) {
+
+          p6StartServerEvent(
+            "taco"
+          );
+
+        }
+
+        else {
+
+          p6StartMeEvent(
+            "taco"
+          );
+
+        }
+
+      };
+
+  }
+);
+
+
+/* =========================================================
+   ALL SERVER LUCKY BLOCK SEND
+========================================================= */
+
+document.addEventListener(
+  "click",
+
+  async function(event) {
+
+    const button =
+      event.target.closest(
+        "#adminSpawnMythicBlock, #adminSpawnGodlyBlock, #adminSpawnSecretBlock"
+      );
+
+
+    if (!button) {
+      return;
+    }
+
+
+    if (
+      p6Target !==
+      "server"
+    ) {
+
+      return;
+    }
+
+
+    event.preventDefault();
+
+    event.stopImmediatePropagation();
+
+
+    let type =
+      "";
+
+
+    if (
+      button.id ===
+      "adminSpawnMythicBlock"
+    ) {
+
+      type =
+        "mythic";
+
+    }
+
+
+    if (
+      button.id ===
+      "adminSpawnGodlyBlock"
+    ) {
+
+      type =
+        "godly";
+
+    }
+
+
+    if (
+      button.id ===
+      "adminSpawnSecretBlock"
+    ) {
+
+      type =
+        "secret";
+
+    }
+
+
+    if (!type) {
+      return;
+    }
+
+
+    try {
+
+      await sendServerCommand({
+
+        commandType:
+          "spawnLuckyBlock",
+
+        petName:
+          type
+
+      });
+
+
+      showServerAnnouncement(
+
+        "🎁 " +
+        type.toUpperCase() +
+        " LUCKY BLOCK SENT!"
+
+      );
+
+    }
+
+    catch (error) {
+
+      console.error(
+        "LUCKY SEND ERROR:",
+        error
+      );
+
+    }
+
+  },
+
+  true
+);
+
+
+/* =========================================================
+   ALL SERVER LUCKY BLOCK RECEIVE
+========================================================= */
+
+async function gypReceiveLuckyBlocks() {
+
+  try {
+
+    const result =
+      await appwriteTables.listRows({
+
+        databaseId:
+          SERVER_DATABASE_ID,
+
+        tableId:
+          SERVER_COMMANDS_TABLE_ID,
+
+        queries: [
+
+          Appwrite.Query.orderDesc(
+            "gameCreatedAt"
+          ),
+
+          Appwrite.Query.limit(
+            25
+          )
+
+        ]
+
+      });
+
+
+    const rows =
+      result.rows || [];
+
+
+    rows.forEach(
+      function(command) {
+
+        if (
+          command.commandType !==
+          "spawnLuckyBlock"
+        ) {
+          return;
+        }
+
+
+        if (
+          command.target !==
+          "server"
+        ) {
+          return;
+        }
+
+
+        const commandId =
+          command.gameCommandId ||
+          command.$id;
+
+
+        if (!commandId) {
+          return;
+        }
+
+
+        const key =
+          "GYP_LUCKY_" +
+          commandId;
+
+
+        if (
+          localStorage.getItem(
+            key
+          )
+        ) {
+          return;
+        }
+
+
+        const type =
+          String(
+            command.petName || ""
+          ).toLowerCase();
+
+
+        if (
+          type !== "mythic" &&
+          type !== "godly" &&
+          type !== "secret"
+        ) {
+          return;
+        }
+
+
+        /*
+           MARK FIRST
+           PREVENT DUPLICATE
+        */
+
+        localStorage.setItem(
+          key,
+          "1"
+        );
+
+
+        spawnLuckyBlockByType(
+          type
+        );
+
+
+        showServerAnnouncement(
+
+          "🎁 " +
+          type.toUpperCase() +
+          " LUCKY BLOCK SPAWNED!"
+
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "LUCKY RECEIVE ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+gypReceiveLuckyBlocks();
+
+
+setInterval(
+  gypReceiveLuckyBlocks,
+  3000
+);
+
+
+console.log(
+  "✅ TACO + LUCKY BLOCK EMERGENCY PATCH READY"
+);
+/* =========================================================
+   TACO x4 DISPLAY FIX
+   APPEND ONLY
+========================================================= */
+
+setInterval(
+  function() {
+
+    const active =
+      typeof getActiveEvent === "function"
+        ? getActiveEvent()
+        : null;
+
+    if (
+      !active ||
+      !active.event ||
+      active.event.id !== "taco"
+    ) {
+      return;
+    }
+
+
+    const description =
+      document.getElementById(
+        "eventDescription"
+      );
+
+
+    if (description) {
+
+      description.textContent =
+        active.source === "server"
+          ? "🌍 SERVER EVENT • 30% HIT • ×4 MONEY"
+          : "👑 ADMIN EVENT • 30% HIT • ×4 MONEY";
+
+    }
+
+
+    /*
+       ALSO FIX ANY OLD x3 TEXT
+       INSIDE EVENT UI
+    */
+
+    document
+      .querySelectorAll(
+        ".event-bar, .event-info, .event-description"
+      )
+      .forEach(
+        function(element) {
+
+          if (
+            element.textContent
+              .toUpperCase()
+              .includes("TACO")
+          ) {
+
+            element.innerHTML =
+              element.innerHTML.replace(
+                /×3 MONEY/gi,
+                "×4 MONEY"
+              );
+
+          }
+
+        }
+      );
+
+  },
+
+  250
+);
+
+console.log(
+  "🌮 TACO DISPLAY = ×4 
